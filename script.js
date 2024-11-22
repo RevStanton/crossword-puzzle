@@ -1,3 +1,5 @@
+// script.js
+
 // Import the word bank
 import { wordBank } from './wordBank.js';
 
@@ -128,8 +130,9 @@ function renderGrid(grid, placedWords) {
                 // Render the letter in the grid
                 const input = document.createElement("input");
                 input.setAttribute("maxlength", "1");
-                input.value = cellValue; // Pre-fill the input with the letter for now
-                input.style.pointerEvents = "none"; // Prevent editing
+                // For a real game, you might want to leave the input empty
+                // input.value = cellValue; // Pre-fill the input with the letter for now
+                input.style.pointerEvents = "auto"; // Allow editing
                 tableCell.appendChild(input);
 
                 // Check if this cell is the start of a word
@@ -174,12 +177,17 @@ function renderClues(placedWords) {
         return;
     }
 
-    cluesContainer.innerHTML = "<h2>Clues</h2><ol>";
+    cluesContainer.innerHTML = "<h2>Clues</h2>";
+    const clueList = document.createElement("ol");
+
     placedWords.forEach(word => {
         const clueItem = document.createElement("li");
-        clueItem.textContent = `${word.number}. ${word.clue}`;
-        cluesContainer.querySelector("ol").appendChild(clueItem);
+        const direction = word.isHorizontal ? "Across" : "Down";
+        clueItem.textContent = `${word.number}. (${direction}) ${word.clue}`;
+        clueList.appendChild(clueItem);
     });
+
+    cluesContainer.appendChild(clueList);
 }
 
 /**
