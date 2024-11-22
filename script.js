@@ -54,6 +54,7 @@ function placeWord(grid, word, row, col, isHorizontal) {
             grid[row + i][col] = word[i];
         }
     }
+    console.log(`Successfully placed word: ${word}`);
     return true;
 }
 
@@ -124,11 +125,14 @@ function renderGrid(grid, placedWords) {
             if (cellValue === null) {
                 tableCell.style.backgroundColor = "black"; // Black cell
             } else {
+                // Render the letter in the grid
                 const input = document.createElement("input");
                 input.setAttribute("maxlength", "1");
+                input.value = cellValue; // Pre-fill the input with the letter for now
+                input.style.pointerEvents = "none"; // Prevent editing
                 tableCell.appendChild(input);
 
-                // Check if this is the start of a word
+                // Check if this cell is the start of a word
                 const wordStart = placedWords.find(
                     word =>
                         word.row === row &&
