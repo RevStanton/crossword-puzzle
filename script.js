@@ -43,8 +43,10 @@ function canPlaceWord(grid, word, row, col, direction) {
             if (currentCell !== null && currentCell.letter !== word[i]) return false;
 
             // Ensure adjacent cells are empty (above and below)
-            if (row > 0 && grid[row - 1][col + i] !== null) return false;
-            if (row < gridSize - 1 && grid[row + 1][col + i] !== null) return false;
+            if (currentCell === null) {
+                if (row > 0 && grid[row - 1][col + i] !== null) return false;
+                if (row < gridSize - 1 && grid[row + 1][col + i] !== null) return false;
+            }
         }
     } else if (direction === 'down') {
         if (row + wordLength > gridSize) return false; // Out of bounds
@@ -60,8 +62,10 @@ function canPlaceWord(grid, word, row, col, direction) {
             if (currentCell !== null && currentCell.letter !== word[i]) return false;
 
             // Ensure adjacent cells are empty (left and right)
-            if (col > 0 && grid[row + i][col - 1] !== null) return false;
-            if (col < gridSize - 1 && grid[row + i][col + 1] !== null) return false;
+            if (currentCell === null) {
+                if (col > 0 && grid[row + i][col - 1] !== null) return false;
+                if (col < gridSize - 1 && grid[row + i][col + 1] !== null) return false;
+            }
         }
     }
 
@@ -116,29 +120,56 @@ function fillGrid(grid, words, index, placedWords) {
     const word = wordObj.word;
     const gridSize = grid.length;
 
-    for (let row = 0; row < gridSize; row++) {
-        for (let col = 0; col < gridSize; col++) {
-            for (let direction of ['across', 'down']) {
-                if (canPlaceWord(grid, word, row, col, direction)) {
-                    const positions = placeWord(grid, word, row, col, direction);
-                    placedWords.push({
-                        word,
-                        clue: wordObj.clue,
-                        row,
-                        col,
-                        direction,
-                        positions,
-                    });
+    const positionsToTry = [];
 
-                    if (fillGrid(grid, words, index + 1, placedWords)) {
-                        return true; // Successfully placed all words
+    if (index === 0) {
+        // For the first word, place it at the center of the grid
+        const midRow = Math.floor(gridSize / 2);
+        const midCol = Math.floor(gridSize / 2) - Math.floor(word.length / 2);
+        positionsToTry.push({
+            row: midRow,
+            col: midCol,
+            direction: 'across',
+        });
+    } else {
+        // For subsequent words, try to intersect with placed words
+        for (let i = 0; i < word.length; i++) {
+            const letter = word[i];
+            for (const placedWord of placedWords) {
+                for (let j = 0; j < placedWord.word.length; j++) {
+                    if (placedWord.word[j] === letter) {
+                        const row = placedWord.direction === 'across' ? placedWord.row + j : placedWord.row + i - j;
+                        const col = placedWord.direction === 'across' ? placedWord.col + j - i : placedWord.col + j;
+                        const direction = placedWord.direction === 'across' ? 'down' : 'across';
+
+                        positionsToTry.push({ row, col, direction });
                     }
-
-                    // Backtrack
-                    placedWords.pop();
-                    removeWord(grid, positions);
                 }
             }
+        }
+    }
+
+    for (const pos of positionsToTry) {
+        const { row, col, direction } = pos;
+
+        if (canPlaceWord(grid, word, row, col, direction)) {
+            const positions = placeWord(grid, word, row, col, direction);
+            placedWords.push({
+                word,
+                clue: wordObj.clue,
+                row,
+                col,
+                direction,
+                positions,
+            });
+
+            if (fillGrid(grid, words, index + 1, placedWords)) {
+                return true; // Successfully placed all words
+            }
+
+            // Backtrack
+            placedWords.pop();
+            removeWord(grid, positions);
         }
     }
 
