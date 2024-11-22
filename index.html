@@ -7,70 +7,35 @@
 
     <!-- Basic styling -->
     <style>
-        /* General body styles */
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #121212;
-            color: #ffffff;
-            margin: 0;
-            padding: 0;
-        }
+    #grid-container table {
+        border-collapse: collapse;
+        margin: 20px auto;
+    }
 
-        /* Heading styles */
-        h1 {
-            color: #ffa500;
-            margin-top: 20px;
-        }
+    #grid-container td {
+        width: 40px; /* Increased size for better visibility */
+        height: 40px;
+        border: 1px solid #ffffff;
+        text-align: center;
+        background-color: #000000; /* Black background for cells */
+    }
 
-        /* Grid container styles */
-        #grid-container table {
-            border-collapse: collapse;
-            margin: 20px auto;
-        }
+    #grid-container input {
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        font-size: 18px;
+        background-color: #121212;
+        color: #ffffff;
+        border: none;
+        box-sizing: border-box; /* Ensures inputs fit neatly */
+    }
 
-        #grid-container td {
-            width: 30px;
-            height: 30px;
-            border: 1px solid #ffffff;
-            text-align: center;
-        }
+    #grid-container input:focus {
+        outline: none;
+    }
+</style>
 
-        #grid-container input {
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            font-size: 16px;
-            background-color: #121212;
-            color: #ffffff;
-            border: none;
-        }
-
-        #grid-container input:focus {
-            outline: none;
-        }
-
-        /* Clues section styles */
-        #clues {
-            margin: 20px auto;
-            text-align: left;
-            display: inline-block;
-        }
-
-        #clues h2 {
-            color: #ffa500;
-            margin-bottom: 10px;
-        }
-
-        #clues ol {
-            padding-left: 20px;
-            text-align: left;
-        }
-
-        #clues li {
-            margin: 5px 0;
-        }
-    </style>
 </head>
 <body>
     <!-- Page title -->
