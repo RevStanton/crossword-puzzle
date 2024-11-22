@@ -26,39 +26,42 @@ function createEmptyGrid(size) {
  * @returns {boolean} - Whether the placement is valid.
  */
 function canPlaceWordAt(grid, word, row, col, isHorizontal) {
+    const gridSize = grid.length;
+
     if (isHorizontal) {
-        if (col + word.length > grid[0].length) return false; // Out of bounds
+        if (col + word.length > gridSize) return false; // Out of bounds
+
+        // Ensure that the starting cell is valid
+        if (col > 0 && grid[row][col - 1] !== null) return false; // Can't start in the middle of a word
+        if (col + word.length < gridSize && grid[row][col + word.length] !== null) return false; // Cell after word must be empty or out of bounds
+
         for (let i = 0; i < word.length; i++) {
             const currentCell = grid[row][col + i];
             if (currentCell !== null && currentCell !== word[i]) {
                 return false; // Conflict with existing letter
             }
-            // Check for adjacent words
-            if (grid[row][col + i] === null) {
-                if (row > 0 && grid[row - 1][col + i] !== null) return false;
-                if (row < grid.length - 1 && grid[row + 1][col + i] !== null) return false;
-            }
+            // Check for adjacent cells
+            if (row > 0 && grid[row - 1][col + i] !== null) return false; // Cell above must be empty
+            if (row < gridSize - 1 && grid[row + 1][col + i] !== null) return false; // Cell below must be empty
         }
-        // Check for cells before and after the word
-        if (col > 0 && grid[row][col - 1] !== null) return false;
-        if (col + word.length < grid[0].length && grid[row][col + word.length] !== null) return false;
     } else {
-        if (row + word.length > grid.length) return false; // Out of bounds
+        if (row + word.length > gridSize) return false; // Out of bounds
+
+        // Ensure that the starting cell is valid
+        if (row > 0 && grid[row - 1][col] !== null) return false; // Can't start in the middle of a word
+        if (row + word.length < gridSize && grid[row + word.length][col] !== null) return false; // Cell after word must be empty or out of bounds
+
         for (let i = 0; i < word.length; i++) {
             const currentCell = grid[row + i][col];
             if (currentCell !== null && currentCell !== word[i]) {
                 return false; // Conflict with existing letter
             }
-            // Check for adjacent words
-            if (grid[row + i][col] === null) {
-                if (col > 0 && grid[row + i][col - 1] !== null) return false;
-                if (col < grid[0].length - 1 && grid[row + i][col + 1] !== null) return false;
-            }
+            // Check for adjacent cells
+            if (col > 0 && grid[row + i][col - 1] !== null) return false; // Cell to the left must be empty
+            if (col < gridSize - 1 && grid[row + i][col + 1] !== null) return false; // Cell to the right must be empty
         }
-        // Check for cells before and after the word
-        if (row > 0 && grid[row - 1][col] !== null) return false;
-        if (row + word.length < grid.length && grid[row + word.length][col] !== null) return false;
     }
+
     return true;
 }
 
@@ -86,32 +89,47 @@ function placeWordAt(grid, word, row, col, isHorizontal) {
  * Try to place a word on the grid by finding matching letters.
  * @param {Array} grid - The crossword grid.
  * @param {string} word - The word to place.
- * @param {Array} placedWords - Array of already placed words.
  * @returns {Object|null} - The placement data or null if placement failed.
  */
-function tryPlaceWord(grid, word, placedWords) {
-    for (let i = 0; i < word.length; i++) {
-        const letter = word[i];
-        // Search the grid for matching letters
-        for (let row = 0; row < grid.length; row++) {
-            for (let col = 0; col < grid[0].length; col++) {
-                if (grid[row][col] === letter) {
-                    // Try to place the word horizontally
-                    const colStart = col - i;
-                    if (canPlaceWordAt(grid, word, row, colStart, true)) {
-                        placeWordAt(grid, word, row, colStart, true);
-                        return { word, row, col: colStart, isHorizontal: true };
-                    }
-                    // Try to place the word vertically
-                    const rowStart = row - i;
-                    if (canPlaceWordAt(grid, word, rowStart, col, false)) {
-                        placeWordAt(grid, word, rowStart, col, false);
-                        return { word, row: rowStart, col, isHorizontal: false };
+function tryPlaceWord(grid, word) {
+    const gridSize = grid.length;
+
+    // Try every cell in the grid
+    for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+            for (let isHorizontal of [true, false]) {
+                for (let offset = 0; offset < word.length; offset++) {
+                    const startRow = isHorizontal ? row : row - offset;
+                    const startCol = isHorizontal ? col - offset : col;
+
+                    if (startRow < 0 || startCol < 0) continue;
+
+                    const canPlace = canPlaceWordAt(grid, word, startRow, startCol, isHorizontal);
+
+                    if (canPlace) {
+                        // Check if the word overlaps with existing letters correctly
+                        let validPlacement = true;
+                        for (let i = 0; i < word.length; i++) {
+                            const currentRow = isHorizontal ? startRow : startRow + i;
+                            const currentCol = isHorizontal ? startCol + i : startCol;
+                            const cellValue = grid[currentRow][currentCol];
+
+                            if (cellValue !== null && cellValue !== word[i]) {
+                                validPlacement = false;
+                                break;
+                            }
+                        }
+
+                        if (validPlacement) {
+                            placeWordAt(grid, word, startRow, startCol, isHorizontal);
+                            return { word, row: startRow, col: startCol, isHorizontal };
+                        }
                     }
                 }
             }
         }
     }
+
     return null; // Failed to place the word
 }
 
@@ -131,20 +149,25 @@ function placeWordsOnGrid(grid, wordBank) {
     const firstWordObj = wordBank[0];
     const firstWord = firstWordObj.word;
     const firstWordStartCol = midCol - Math.floor(firstWord.length / 2);
-    placeWordAt(grid, firstWord, midRow, firstWordStartCol, true);
-    placedWords.push({
-        word: firstWord,
-        clue: firstWordObj.clue,
-        row: midRow,
-        col: firstWordStartCol,
-        isHorizontal: true,
-    });
+
+    if (canPlaceWordAt(grid, firstWord, midRow, firstWordStartCol, true)) {
+        placeWordAt(grid, firstWord, midRow, firstWordStartCol, true);
+        placedWords.push({
+            word: firstWord,
+            clue: firstWordObj.clue,
+            row: midRow,
+            col: firstWordStartCol,
+            isHorizontal: true,
+        });
+    } else {
+        console.error(`Failed to place word: ${firstWord}`);
+    }
 
     // Place the remaining words
     for (let i = 1; i < wordBank.length; i++) {
         const wordObj = wordBank[i];
         const word = wordObj.word;
-        const placement = tryPlaceWord(grid, word, placedWords);
+        const placement = tryPlaceWord(grid, word);
 
         if (placement) {
             placedWords.push({
@@ -169,39 +192,38 @@ function placeWordsOnGrid(grid, wordBank) {
  * @returns {Array} - Array of word metadata with assigned numbers.
  */
 function numberGrid(grid, placedWords) {
-    const numbers = [];
-    let num = 1;
+    let number = 1;
+    const numberMap = {};
 
-    // Create a helper grid to store numbers
-    const numberGrid = grid.map(row => row.map(cell => null));
+    // Iterate over the grid to assign numbers in the correct order
+    for (let row = 0; row < grid.length; row++) {
+        for (let col = 0; col < grid[row].length; col++) {
+            if (grid[row][col] !== null) {
+                let startsWord = false;
 
-    // Assign numbers to starting cells of words
-    for (const wordData of placedWords) {
-        const { row, col, isHorizontal } = wordData;
-        let needsNumber = false;
+                // Check if this cell is the start of a horizontal word
+                if ((col === 0 || grid[row][col - 1] === null) && (col + 1 < grid[row].length && grid[row][col + 1] !== null)) {
+                    startsWord = true;
+                }
 
-        if (isHorizontal) {
-            // If this is the first letter or the cell above is empty
-            if (col === 0 || grid[row][col - 1] === null) {
-                needsNumber = true;
+                // Check if this cell is the start of a vertical word
+                if ((row === 0 || grid[row - 1][col] === null) && (row + 1 < grid.length && grid[row + 1][col] !== null)) {
+                    startsWord = true;
+                }
+
+                if (startsWord && !numberMap[`${row}-${col}`]) {
+                    numberMap[`${row}-${col}`] = number;
+                    number++;
+                }
             }
-        }
-
-        if (!needsNumber && !isHorizontal) {
-            // If this is the first letter or the cell to the left is empty
-            if (row === 0 || grid[row - 1][col] === null) {
-                needsNumber = true;
-            }
-        }
-
-        if (needsNumber && numberGrid[row][col] === null) {
-            numberGrid[row][col] = num;
-            wordData.number = num;
-            num++;
-        } else if (numberGrid[row][col] !== null) {
-            wordData.number = numberGrid[row][col];
         }
     }
+
+    // Update placedWords with the correct numbers
+    placedWords.forEach(word => {
+        const key = `${word.row}-${word.col}`;
+        word.number = numberMap[key];
+    });
 
     return placedWords;
 }
@@ -242,6 +264,7 @@ function renderGrid(grid, placedWords) {
                 const input = document.createElement("input");
                 input.setAttribute("maxlength", "1");
                 input.style.pointerEvents = "auto"; // Allow editing
+                input.style.textTransform = "uppercase";
                 tableCell.appendChild(input);
 
                 // Check if this cell is the start of a word
@@ -323,7 +346,7 @@ function renderClues(placedWords) {
  * Initialize the crossword puzzle.
  */
 document.addEventListener("DOMContentLoaded", () => {
-    const gridSize = 15; // Increased grid size for better word fitting
+    const gridSize = 15; // Standard crossword size
     const grid = createEmptyGrid(gridSize);
     const placedWords = placeWordsOnGrid(grid, wordBank);
     const numberedWords = numberGrid(grid, placedWords);
