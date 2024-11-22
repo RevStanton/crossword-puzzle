@@ -2,7 +2,7 @@
 import { wordBank } from './wordBank.js';
 
 /**
- * Shuffle the word bank to ensure randomness each time the page loads.
+ * Shuffle the word bank to ensure randomness.
  * @param {Array} words - The word bank array to shuffle.
  * @returns {Array} - A shuffled array of word objects.
  */
@@ -11,30 +11,102 @@ function shuffleWordBank(words) {
 }
 
 /**
- * Generate a blank grid of a given size.
- * @param {number} size - The dimensions of the grid (size x size).
- * @returns {Array} - A 2D array representing the grid, initialized with null values.
+ * Create an empty grid.
+ * @param {number} size - The size of the grid (size x size).
+ * @returns {Array} - A 2D array representing the grid.
  */
 function createEmptyGrid(size) {
     const grid = [];
     for (let i = 0; i < size; i++) {
-        grid.push(new Array(size).fill(null)); // Fill rows with `null`
+        grid.push(new Array(size).fill(null)); // Fill each row with `null`
     }
-    console.log("Empty grid created:", grid);
     return grid;
 }
 
+/**
+ * Attempt to place a word on the grid.
+ * @param {Array} grid - The crossword grid.
+ * @param {string} word - The word to place.
+ * @param {number} row - The starting row.
+ * @param {number} col - The starting column.
+ * @param {boolean} isHorizontal - Whether the word is placed horizontally.
+ * @returns {boolean} - Whether the placement was successful.
+ */
+function placeWord(grid, word, row, col, isHorizontal) {
+    if (isHorizontal) {
+        if (col + word.length > grid.length) return false; // Out of bounds
+        for (let i = 0; i < word.length; i++) {
+            if (grid[row][col + i] !== null && grid[row][col + i] !== word[i]) {
+                return false; // Overlap conflict
+            }
+        }
+        for (let i = 0; i < word.length; i++) {
+            grid[row][col + i] = word[i];
+        }
+    } else {
+        if (row + word.length > grid.length) return false; // Out of bounds
+        for (let i = 0; i < word.length; i++) {
+            if (grid[row + i][col] !== null && grid[row + i][col] !== word[i]) {
+                return false; // Overlap conflict
+            }
+        }
+        for (let i = 0; i < word.length; i++) {
+            grid[row + i][col] = word[i];
+        }
+    }
+    return true;
+}
 
 /**
- * Render the crossword grid as an HTML table.
- * @param {Array} grid - The 2D array representing the crossword grid.
+ * Place all words on the grid with starting numbers.
+ * @param {Array} grid - The crossword grid.
+ * @param {Array} wordBank - The word bank with words and clues.
+ * @returns {Array} - An array of word starting points with their numbers.
  */
-function renderGrid(grid) {
-    console.log("Rendering grid...");
+function placeWordsOnGrid(grid, wordBank) {
+    const placedWords = [];
+    let wordNumber = 1;
 
+    for (const wordObj of wordBank) {
+        const word = wordObj.word;
+        let placed = false;
+
+        for (let attempt = 0; attempt < 100; attempt++) { // Try up to 100 times
+            const row = Math.floor(Math.random() * grid.length);
+            const col = Math.floor(Math.random() * grid.length);
+            const isHorizontal = Math.random() > 0.5;
+
+            if (placeWord(grid, word, row, col, isHorizontal)) {
+                placedWords.push({
+                    word,
+                    clue: wordObj.clue,
+                    number: wordNumber,
+                    row,
+                    col,
+                    isHorizontal,
+                });
+                wordNumber++;
+                placed = true;
+                break;
+            }
+        }
+
+        if (!placed) {
+            console.error(`Failed to place word: ${word}`);
+        }
+    }
+
+    return placedWords;
+}
+
+/**
+ * Render the grid with word starting numbers and black cells.
+ * @param {Array} grid - The crossword grid.
+ * @param {Array} placedWords - Array of placed words with their metadata.
+ */
+function renderGrid(grid, placedWords) {
     const gridContainer = document.getElementById("grid-container");
 
-    // Check if the container exists
     if (!gridContainer) {
         console.error("Error: Grid container not found!");
         return;
@@ -42,73 +114,79 @@ function renderGrid(grid) {
 
     const table = document.createElement("table");
 
-    // Loop through each row of the grid array
-    grid.forEach(row => {
+    for (let row = 0; row < grid.length; row++) {
         const tableRow = document.createElement("tr");
-        row.forEach(cell => {
-            const tableCell = document.createElement("td");
 
-            if (cell === null) {
-                // Create an input box for editable cells
+        for (let col = 0; col < grid[row].length; col++) {
+            const tableCell = document.createElement("td");
+            const cellValue = grid[row][col];
+
+            if (cellValue === null) {
+                tableCell.style.backgroundColor = "black"; // Black cell
+            } else {
                 const input = document.createElement("input");
                 input.setAttribute("maxlength", "1");
                 tableCell.appendChild(input);
-            } else {
-                // Render predefined letters (for future use)
-                tableCell.textContent = cell;
-                tableCell.style.backgroundColor = "black";
+
+                // Check if this is the start of a word
+                const wordStart = placedWords.find(
+                    word =>
+                        word.row === row &&
+                        word.col === col &&
+                        grid[row][col] === word.word[0]
+                );
+
+                if (wordStart) {
+                    const number = document.createElement("span");
+                    number.textContent = wordStart.number;
+                    number.style.fontSize = "10px";
+                    number.style.position = "absolute";
+                    number.style.top = "2px";
+                    number.style.left = "2px";
+                    tableCell.style.position = "relative";
+                    tableCell.appendChild(number);
+                }
             }
 
             tableRow.appendChild(tableCell);
-        });
-        table.appendChild(tableRow);
-    });
+        }
 
-    // Clear existing content and add the new table
+        table.appendChild(tableRow);
+    }
+
     gridContainer.innerHTML = "";
     gridContainer.appendChild(table);
-
-    console.log("Grid rendered successfully!");
 }
 
-
 /**
- * Render clues as a list below the crossword grid.
+ * Render clues below the grid.
+ * @param {Array} placedWords - Array of placed words with their metadata.
  */
-function renderClues() {
-    console.log("Rendering clues...");
+function renderClues(placedWords) {
     const cluesContainer = document.getElementById("clues");
 
-    // Check if the container exists
     if (!cluesContainer) {
         console.error("Error: Clues container not found!");
         return;
     }
 
-    // Shuffle the word bank and create a list of clues
-    const shuffledWordBank = shuffleWordBank(wordBank);
-
-    // Generate clue list
     cluesContainer.innerHTML = "<h2>Clues</h2><ol>";
-    shuffledWordBank.forEach(entry => {
+    placedWords.forEach(word => {
         const clueItem = document.createElement("li");
-        clueItem.textContent = entry.clue;
+        clueItem.textContent = `${word.number}. ${word.clue}`;
         cluesContainer.querySelector("ol").appendChild(clueItem);
     });
-
-    console.log("Clues rendered successfully!");
 }
 
 /**
- * Initialize the crossword puzzle application.
+ * Initialize the crossword puzzle.
  */
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("Crossword Puzzle App Initialized");
+    const gridSize = 10;
+    const grid = createEmptyGrid(gridSize);
+    const shuffledWordBank = shuffleWordBank(wordBank);
+    const placedWords = placeWordsOnGrid(grid, shuffledWordBank);
 
-    // Create a 10x10 blank grid (placeholder for dynamic word placement)
-    const grid = createEmptyGrid(10);
-
-    // Render the grid and clues
-    renderGrid(grid);
-    renderClues();
+    renderGrid(grid, placedWords);
+    renderClues(placedWords);
 });
