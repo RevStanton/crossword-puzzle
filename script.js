@@ -18,10 +18,12 @@ function shuffleWordBank(words) {
 function createEmptyGrid(size) {
     const grid = [];
     for (let i = 0; i < size; i++) {
-        grid.push(new Array(size).fill(null)); // Fill each row with `null`
+        grid.push(new Array(size).fill(null)); // Fill rows with `null`
     }
+    console.log("Empty grid created:", grid);
     return grid;
 }
+
 
 /**
  * Render the crossword grid as an HTML table.
@@ -29,6 +31,7 @@ function createEmptyGrid(size) {
  */
 function renderGrid(grid) {
     console.log("Rendering grid...");
+
     const gridContainer = document.getElementById("grid-container");
 
     // Check if the container exists
@@ -39,7 +42,7 @@ function renderGrid(grid) {
 
     const table = document.createElement("table");
 
-    // Generate rows and cells for the grid
+    // Loop through each row of the grid array
     grid.forEach(row => {
         const tableRow = document.createElement("tr");
         row.forEach(cell => {
@@ -51,7 +54,7 @@ function renderGrid(grid) {
                 input.setAttribute("maxlength", "1");
                 tableCell.appendChild(input);
             } else {
-                // Render predefined letters (if added later)
+                // Render predefined letters (for future use)
                 tableCell.textContent = cell;
                 tableCell.style.backgroundColor = "black";
             }
@@ -67,6 +70,7 @@ function renderGrid(grid) {
 
     console.log("Grid rendered successfully!");
 }
+
 
 /**
  * Render clues as a list below the crossword grid.
