@@ -17,20 +17,25 @@ function createEmptyGrid(size) {
 
 // Render the grid as an HTML table
 function renderGrid(grid) {
+    console.log("Rendering grid..."); // Add this for debugging
     const gridContainer = document.getElementById("grid-container");
-    const table = document.createElement("table");
+    if (!gridContainer) {
+        console.error("Error: Grid container not found!");
+        return;
+    }
 
+    const table = document.createElement("table");
     grid.forEach(row => {
         const tableRow = document.createElement("tr");
         row.forEach(cell => {
             const tableCell = document.createElement("td");
             if (cell === null) {
                 const input = document.createElement("input");
-                input.setAttribute("maxlength", "1"); // Limit each input box to one character
+                input.setAttribute("maxlength", "1");
                 tableCell.appendChild(input);
             } else {
-                tableCell.textContent = cell; // Add predefined letters (if applicable in the future)
-                tableCell.style.backgroundColor = "black"; // Style black cells
+                tableCell.textContent = cell;
+                tableCell.style.backgroundColor = "black";
             }
             tableRow.appendChild(tableCell);
         });
@@ -39,7 +44,9 @@ function renderGrid(grid) {
 
     gridContainer.innerHTML = ""; // Clear any existing content
     gridContainer.appendChild(table); // Add the table to the container
+    console.log("Grid rendered successfully!");
 }
+
 
 // Render clues
 function renderClues() {
