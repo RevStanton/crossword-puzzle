@@ -55,6 +55,12 @@ export const wordBank = [
     { word: "ORB", clue: "A mystical spherical object" },
     { word: "DRUID", clue: "A nature-based spellcaster" },
     { word: "GENIE", clue: "A magical being that grants wishes" },
+    { word: "WYVERN", clue: "A dragon-like creature with two legs and wings" },
+    { word: "TALISMAN", clue: "An object believed to have magical properties" },
 ];
 
-console.log(`${wordBank.length} words in the fantasy word bank loaded.`);
+if (!wordBank || wordBank.length === 0) {
+    console.error("Error: Word bank is not loaded or empty!");
+} else {
+    console.log(`${wordBank.length} words in the fantasy word bank loaded. Sample: ${wordBank.slice(0, 3).map(w => w.word).join(", ")}`);
+}
