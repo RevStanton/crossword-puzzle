@@ -1,10 +1,62 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Crossword Puzzle</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Crossword Puzzle</title>
+    <!-- Add basic styling -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        h1 {
+            color: #ffa500;
+            margin-top: 20px;
+        }
+        #grid-container {
+            margin: 20px auto;
+            display: inline-block;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+        td {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #ffffff;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 16px;
+            background-color: #121212;
+            color: #ffffff;
+            border: none;
+        }
+        input:focus {
+            outline: none;
+        }
+        #clues {
+            margin: 20px auto;
+            text-align: left;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Crossword Puzzle!</h1>
-    <script src="script.js"></script>
+    <h1>Fantasy Crossword Puzzle</h1>
+    <div id="grid-container">
+        <!-- The grid will be dynamically generated here -->
+    </div>
+    <div id="clues">
+        <!-- Clues will be dynamically generated here -->
+    </div>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
