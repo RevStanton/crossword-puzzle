@@ -2,56 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fantasy Crossword Puzzle</title>
-
-    <!-- Basic styling -->
+    <title>Crossword Puzzle</title>
     <style>
-    #grid-container table {
-        border-collapse: collapse;
-        margin: 20px auto;
-    }
-
-    #grid-container td {
-        width: 40px; /* Increased size for better visibility */
-        height: 40px;
-        border: 1px solid #ffffff;
-        text-align: center;
-        background-color: #000000; /* Black background for cells */
-    }
-
-    #grid-container input {
-        width: 100%;
-        height: 100%;
-        text-align: center;
-        font-size: 18px;
-        background-color: #121212;
-        color: #ffffff;
-        border: none;
-        box-sizing: border-box; /* Ensures inputs fit neatly */
-    }
-
-    #grid-container input:focus {
-        outline: none;
-    }
-</style>
-
+        /* Basic styling for the crossword grid */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #grid-container {
+            margin: 20px 0;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+        }
+        td {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #000;
+            position: relative;
+        }
+        td input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            text-align: center;
+            font-size: 18px;
+            background-color: transparent;
+        }
+        td span {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 10px;
+        }
+        #clues {
+            width: 80%;
+            margin: 0 auto;
+        }
+        #clues ol {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        #clues li {
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Page title -->
-    <h1>Fantasy Crossword Puzzle</h1>
+    <h1 style="text-align:center;">Crossword Puzzle</h1>
+    <div id="grid-container"></div>
+    <div id="clues"></div>
 
-    <!-- Grid container for dynamically generated crossword -->
-    <div id="grid-container">
-        <!-- Dynamic grid content will go here -->
-    </div>
-
-    <!-- Clues section for dynamically generated clues -->
-    <div id="clues">
-        <!-- Dynamic clues content will go here -->
-    </div>
-
-    <!-- Link to the main JavaScript file -->
+    <!-- Load the script as a module -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
