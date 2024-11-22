@@ -37,15 +37,17 @@ function canPlaceWord(grid, word, row, col, direction) {
         if (col + wordLength < gridSize && grid[row][col + wordLength] !== null) return false; // Right cell must be empty
 
         for (let i = 0; i < wordLength; i++) {
-            const currentCell = grid[row][col + i];
+            const currentRow = row;
+            const currentCol = col + i;
+            const currentCell = grid[currentRow][currentCol];
 
             // Check for conflicts with existing letters
             if (currentCell !== null && currentCell.letter !== word[i]) return false;
 
-            // Ensure adjacent cells are empty (above and below)
+            // Ensure adjacent cells are empty (above and below) if the current cell is empty
             if (currentCell === null) {
-                if (row > 0 && grid[row - 1][col + i] !== null) return false;
-                if (row < gridSize - 1 && grid[row + 1][col + i] !== null) return false;
+                if (currentRow > 0 && grid[currentRow - 1][currentCol] !== null) return false;
+                if (currentRow < gridSize - 1 && grid[currentRow + 1][currentCol] !== null) return false;
             }
         }
     } else if (direction === 'down') {
@@ -56,15 +58,17 @@ function canPlaceWord(grid, word, row, col, direction) {
         if (row + wordLength < gridSize && grid[row + wordLength][col] !== null) return false; // Cell below must be empty
 
         for (let i = 0; i < wordLength; i++) {
-            const currentCell = grid[row + i][col];
+            const currentRow = row + i;
+            const currentCol = col;
+            const currentCell = grid[currentRow][currentCol];
 
             // Check for conflicts with existing letters
             if (currentCell !== null && currentCell.letter !== word[i]) return false;
 
-            // Ensure adjacent cells are empty (left and right)
+            // Ensure adjacent cells are empty (left and right) if the current cell is empty
             if (currentCell === null) {
-                if (col > 0 && grid[row + i][col - 1] !== null) return false;
-                if (col < gridSize - 1 && grid[row + i][col + 1] !== null) return false;
+                if (currentCol > 0 && grid[currentRow][currentCol - 1] !== null) return false;
+                if (currentCol < gridSize - 1 && grid[currentRow][currentCol + 1] !== null) return false;
             }
         }
     }
@@ -138,9 +142,20 @@ function fillGrid(grid, words, index, placedWords) {
             for (const placedWord of placedWords) {
                 for (let j = 0; j < placedWord.word.length; j++) {
                     if (placedWord.word[j] === letter) {
-                        const row = placedWord.direction === 'across' ? placedWord.row + j : placedWord.row + i - j;
-                        const col = placedWord.direction === 'across' ? placedWord.col + j - i : placedWord.col + j;
-                        const direction = placedWord.direction === 'across' ? 'down' : 'across';
+                        // Calculate potential positions
+                        let row, col, direction;
+
+                        if (placedWord.direction === 'across') {
+                            // Try placing the new word vertically intersecting with the placed word
+                            row = placedWord.row + j - i;
+                            col = placedWord.col;
+                            direction = 'down';
+                        } else {
+                            // Try placing the new word horizontally intersecting with the placed word
+                            row = placedWord.row;
+                            col = placedWord.col + j - i;
+                            direction = 'across';
+                        }
 
                         positionsToTry.push({ row, col, direction });
                     }
@@ -148,6 +163,9 @@ function fillGrid(grid, words, index, placedWords) {
             }
         }
     }
+
+    // To increase chances of success, shuffle the positions to try
+    shuffleArray(positionsToTry);
 
     for (const pos of positionsToTry) {
         const { row, col, direction } = pos;
@@ -173,7 +191,45 @@ function fillGrid(grid, words, index, placedWords) {
         }
     }
 
+    // If no intersecting positions are found, try to place the word in any valid position
+    for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+            for (let direction of ['across', 'down']) {
+                if (canPlaceWord(grid, word, row, col, direction)) {
+                    const positions = placeWord(grid, word, row, col, direction);
+                    placedWords.push({
+                        word,
+                        clue: wordObj.clue,
+                        row,
+                        col,
+                        direction,
+                        positions,
+                    });
+
+                    if (fillGrid(grid, words, index + 1, placedWords)) {
+                        return true; // Successfully placed all words
+                    }
+
+                    // Backtrack
+                    placedWords.pop();
+                    removeWord(grid, positions);
+                }
+            }
+        }
+    }
+
     return false; // Failed to place the word
+}
+
+/**
+ * Shuffle an array in place.
+ * @param {Array} array - The array to shuffle.
+ */
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
 }
 
 /**
@@ -330,6 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!success) {
         console.error('Failed to generate crossword puzzle with the given word bank.');
+        alert('Failed to generate crossword puzzle with the given word bank.');
         return;
     }
 
